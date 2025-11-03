@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@FeignClient(name = "medical-clinic", contextId = "appointmentClient", url = "http://localhost:8080", configuration = MedicalClinicConfig.class)
+@FeignClient(name = "medical-clinic", contextId = "appointmentClient", url = "${medical-clinic.url}", configuration = MedicalClinicConfig.class, fallbackFactory = AppointmentClientFallback.class)
 public interface AppointmentClient {
 
     @GetMapping("/appointments")
@@ -28,5 +28,5 @@ public interface AppointmentClient {
     Appointment book(@PathVariable Long appointmentId, @PathVariable Long patientId);
 
     @DeleteMapping("appointments/{id}")
-    void delete(@PathVariable Long id);
+    void cancel(@PathVariable Long id);
 }
