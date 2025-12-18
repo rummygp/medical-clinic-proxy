@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface PageMapper {
 
-    default <E, D> PageDto<D> toDto(PageDto<E> pageDto, Function<E, D> mapper) {
+    default <E, D> PageDto<D> contentMapper(PageDto<E> pageDto, Function<E, D> mapper) {
         var content = pageDto.content().stream()
                 .map(mapper)
                 .collect(Collectors.toList());

@@ -1,6 +1,6 @@
 package com.rummygp.medical_clinic_proxy.service;
 
-import com.rummygp.medical_clinic_proxy.client.DoctorClient;
+import com.rummygp.medical_clinic_proxy.client.MedicalClinicClient;
 import com.rummygp.medical_clinic_proxy.model.dto.DoctorDto;
 import com.rummygp.medical_clinic_proxy.model.dto.PageDto;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,13 +15,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class DoctorServiceTest {
-    private DoctorClient doctorClient;
+    private MedicalClinicClient medicalClinicClient;
     private DoctorService doctorService;
 
     @BeforeEach
     void setup() {
-        this.doctorClient = Mockito.mock(DoctorClient.class);
-        this.doctorService = new DoctorService(doctorClient);
+        this.medicalClinicClient = Mockito.mock(MedicalClinicClient.class);
+        this.doctorService = new DoctorService(medicalClinicClient);
     }
 
     @Test
@@ -30,7 +30,7 @@ public class DoctorServiceTest {
         DoctorDto doctor = new DoctorDto(1L, "John", "Doe", "cardiology", null, List.of(), List.of());
         PageDto<DoctorDto> page = new PageDto<>(List.of(doctor), 0, 10, 1L, 1);
 
-        when(doctorClient.getDoctors(null, pageable)).thenReturn(page);
+        when(medicalClinicClient.getDoctors(null, pageable)).thenReturn(page);
 
         PageDto<DoctorDto> result = doctorService.getDoctors(null, pageable);
 
@@ -43,7 +43,7 @@ public class DoctorServiceTest {
                 () -> assertEquals(doctor.specialization(), result.content().get(0).specialization())
         );
 
-        verify(doctorClient, times(1)).getDoctors(null, pageable);
+        verify(medicalClinicClient, times(1)).getDoctors(null, pageable);
     }
 
     @Test
@@ -53,7 +53,7 @@ public class DoctorServiceTest {
         DoctorDto doctor = new DoctorDto(2L, "Alice", "Smith", specialization, null, List.of(), List.of());
         PageDto<DoctorDto> page = new PageDto<>(List.of(doctor), 1, 5, 1L, 1);
 
-        when(doctorClient.getDoctors(specialization, pageable)).thenReturn(page);
+        when(medicalClinicClient.getDoctors(specialization, pageable)).thenReturn(page);
 
         PageDto<DoctorDto> result = doctorService.getDoctors(specialization, pageable);
 
@@ -66,6 +66,6 @@ public class DoctorServiceTest {
                 () -> assertEquals(doctor.specialization(), result.content().get(0).specialization())
         );
 
-        verify(doctorClient, times(1)).getDoctors(specialization, pageable);
+        verify(medicalClinicClient, times(1)).getDoctors(specialization, pageable);
     }
 }

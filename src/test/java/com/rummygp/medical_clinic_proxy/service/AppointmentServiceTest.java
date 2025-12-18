@@ -1,6 +1,6 @@
 package com.rummygp.medical_clinic_proxy.service;
 
-import com.rummygp.medical_clinic_proxy.client.AppointmentClient;
+import com.rummygp.medical_clinic_proxy.client.MedicalClinicClient;
 import com.rummygp.medical_clinic_proxy.mapper.AppointmentMapper;
 import com.rummygp.medical_clinic_proxy.mapper.PageMapper;
 import com.rummygp.medical_clinic_proxy.model.dto.AppointmentResponseDto;
@@ -13,7 +13,6 @@ import org.mockito.Mockito;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,17 +20,17 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class AppointmentServiceTest {
-    private AppointmentClient appointmentClient;
+    private MedicalClinicClient medicalClinicClient;
     private AppointmentMapper appointmentMapper;
     private PageMapper pageMapper;
     private AppointmentService appointmentService;
 
     @BeforeEach
     void setup() {
-        this.appointmentClient = Mockito.mock(AppointmentClient.class);
+        this.medicalClinicClient = Mockito.mock(MedicalClinicClient.class);
         this.appointmentMapper = Mappers.getMapper(AppointmentMapper.class);
         this.pageMapper = Mappers.getMapper(PageMapper.class);
-        this.appointmentService = new AppointmentService(appointmentClient, appointmentMapper, pageMapper);
+        this.appointmentService = new AppointmentService(medicalClinicClient, appointmentMapper, pageMapper);
     }
 
     @Test
@@ -42,18 +41,19 @@ public class AppointmentServiceTest {
         LocalDateTime to = LocalDateTime.now().plusDays(1);
         Pageable pageable = PageRequest.of(0, 10);
 
-        Appointment appointment = new Appointment();
-        appointment.setId(1L);
-        appointment.setStartTime(LocalDateTime.of(2025, 1, 1, 9, 0));
-        appointment.setEndTime(LocalDateTime.of(2025, 1, 1, 9, 30));
-        appointment.setDoctorId(7L);
-        appointment.setPatientId(patientId);
+        Appointment appointment = Appointment.builder()
+                .id(1L)
+                .startTime(LocalDateTime.of(2025, 1, 1, 9, 0))
+                .endTime(LocalDateTime.of(2025, 1, 1, 9, 30))
+                .doctorId(7L)
+                .patientId(patientId)
+                .build();
 
         PageDto<Appointment> page = new PageDto<>(List.of(appointment), 0, 10, 1L, 1);
 
-        when(appointmentClient.appointmentDetails(null, patientId, specialization, null, from, to, pageable)).thenReturn(page);
+        when(medicalClinicClient.appointmentDetails(null, patientId, specialization, from, to, null, pageable)).thenReturn(page);
 
-        PageDto<AppointmentResponseDto> result = appointmentService.findForPatient(patientId, specialization, from, to, pageable);
+        PageDto<AppointmentResponseDto> result = appointmentService.find(patientId, null, specialization, from, to, pageable);
         AppointmentResponseDto dto = result.content().get(0);
 
         assertAll(
@@ -72,18 +72,19 @@ public class AppointmentServiceTest {
         Long doctorId = 7L;
         Pageable pageable = PageRequest.of(0, 5);
 
-        Appointment appointment = new Appointment();
-        appointment.setId(2L);
-        appointment.setStartTime(LocalDateTime.of(2025, 2, 2, 10, 0));
-        appointment.setEndTime(LocalDateTime.of(2025, 2, 2, 10, 30));
-        appointment.setDoctorId(doctorId);
-        appointment.setPatientId(55L);
+        Appointment appointment = Appointment.builder()
+                .id(2L)
+                .startTime(LocalDateTime.of(2025, 2, 2, 10, 0))
+                .endTime(LocalDateTime.of(2025, 2, 2, 10, 30))
+                .doctorId(doctorId)
+                .patientId(55L)
+                .build();
 
         PageDto<Appointment> page = new PageDto<>(List.of(appointment), 0, 5, 1L, 1);
 
-        when(appointmentClient.appointmentDetails(doctorId, null, null, null, null, null, pageable)).thenReturn(page);
+        when(medicalClinicClient.appointmentDetails(doctorId, null, null, null, null, null, pageable)).thenReturn(page);
 
-        PageDto<AppointmentResponseDto> result = appointmentService.findForDoctor(doctorId, pageable);
+        PageDto<AppointmentResponseDto> result = appointmentService.find(null, doctorId, null, null, null, pageable);
         AppointmentResponseDto dto = result.content().get(0);
 
         assertAll(
@@ -100,14 +101,15 @@ public class AppointmentServiceTest {
         Long appointmentId = 10L;
         Long patientId = 99L;
 
-        Appointment appointment = new Appointment();
-        appointment.setId(appointmentId);
-        appointment.setStartTime(LocalDateTime.of(2025, 3, 3, 11, 0));
-        appointment.setEndTime(LocalDateTime.of(2025, 3, 3, 11, 30));
-        appointment.setDoctorId(12L);
-        appointment.setPatientId(patientId);
+        Appointment appointment = Appointment.builder()
+                .id(appointmentId)
+                .startTime(LocalDateTime.of(2025, 3, 3, 11, 0))
+                .endTime(LocalDateTime.of(2025, 3, 3, 11, 30))
+                .doctorId(12L)
+                .patientId(patientId)
+                .build();
 
-        when(appointmentClient.book(appointmentId, patientId)).thenReturn(appointment);
+        when(medicalClinicClient.book(appointmentId, patientId)).thenReturn(appointment);
         AppointmentResponseDto dto = appointmentService.book(appointmentId, patientId);
 
         assertAll(
@@ -122,22 +124,22 @@ public class AppointmentServiceTest {
     void shouldFindAvailable() {
         Long doctorId = 7L;
         String specialization = "dentistry";
-        LocalDate date = LocalDate.of(2025, 4, 4);
         LocalDateTime from = LocalDateTime.of(2025, 4, 4, 8, 0);
         LocalDateTime to = LocalDateTime.of(2025, 4, 4, 16, 0);
         Pageable pageable = PageRequest.of(1, 20);
 
-        Appointment appointment = new Appointment();
-        appointment.setId(3L);
-        appointment.setStartTime(LocalDateTime.of(2025, 4, 4, 9, 0));
-        appointment.setEndTime(LocalDateTime.of(2025, 4, 4, 9, 30));
-        appointment.setDoctorId(doctorId);
+        Appointment appointment = Appointment.builder()
+                .id(3L)
+                .startTime(LocalDateTime.of(2025, 4, 4, 9, 0))
+                .endTime(LocalDateTime.of(2025, 4, 4, 9, 30))
+                .doctorId(doctorId)
+                .build();
 
         PageDto<Appointment> page = new PageDto<>(List.of(appointment), 1, 20, 1L, 1);
 
-        when(appointmentClient.appointmentDetails(doctorId, null, specialization, date, from, to, pageable)).thenReturn(page);
+        when(medicalClinicClient.appointmentDetails(doctorId, null, specialization, from, to, true, pageable)).thenReturn(page);
 
-        PageDto<AppointmentResponseDto> result = appointmentService.findAvailable(doctorId, specialization, date, from, to, pageable);
+        PageDto<AppointmentResponseDto> result = appointmentService.findAvailable(doctorId, specialization, from, to, pageable);
         AppointmentResponseDto dto = result.content().get(0);
 
         assertAll(
@@ -152,11 +154,11 @@ public class AppointmentServiceTest {
     void shouldCancelAppointment() {
         Long id = 77L;
 
-        doNothing().when(appointmentClient).cancel(id);
+        doNothing().when(medicalClinicClient).cancel(id);
 
         appointmentService.cancel(id);
 
-        assertAll(() -> verify(appointmentClient, times(1)).cancel(id));
+        assertAll(() -> verify(medicalClinicClient, times(1)).cancel(id));
     }
 
 }

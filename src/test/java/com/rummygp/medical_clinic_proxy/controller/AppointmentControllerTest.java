@@ -15,11 +15,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -37,32 +37,33 @@ public class AppointmentControllerTest {
 
     @Test
     void shouldFindForPatient() throws Exception {
-        Long patientId = 42L;
+        Long patientId = 55L;
         String specialization = "cardiology";
-        String starting = "2025-01-01T09:00:00";
-        String ending = "2025-01-01T17:00:00";
-        Pageable pageable = PageRequest.of(0, 10);
+        String starting = "2025-05-05T08:00:00";
+        String ending = "2025-05-05T12:00:00";
+        Pageable pageable = PageRequest.of(2, 10);
 
-        AppointmentResponseDto dto = new AppointmentResponseDto(1L, LocalDateTime.parse("2025-01-01T09:00:00"), LocalDateTime.parse("2025-01-01T09:30:00"), 7L, patientId);
+        AppointmentResponseDto dto = new AppointmentResponseDto(5L, LocalDateTime.parse("2025-05-05T09:00:00"), LocalDateTime.parse("2025-05-05T09:30:00"), 12L, patientId);
         PageDto<AppointmentResponseDto> page = new PageDto<>(List.of(dto), pageable.getPageNumber(), pageable.getPageSize(), 1L, 1);
 
-        when(appointmentService.findForPatient(patientId, specialization, LocalDateTime.parse(starting), LocalDateTime.parse(ending), pageable)).thenReturn(page);
+        when(appointmentService.find(eq(patientId), eq(null), eq(specialization), any(LocalDateTime.class), any(LocalDateTime.class), any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(
-                        MockMvcRequestBuilders.get("/appointments/patient/{id}", patientId)
+                        MockMvcRequestBuilders.get("/appointments")
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .param("patientId", String.valueOf(patientId))
                                 .param("specialization", specialization)
                                 .param("startingDate", starting)
                                 .param("endingDate", ending)
-                                .param("page", "0")
+                                .param("page", "2")
                                 .param("size", "10")
                 )
                 .andExpectAll(
                         status().isOk(),
                         jsonPath("$.content", hasSize(1)),
-                        jsonPath("$.content[0].id").value(1),
-                        jsonPath("$.content[0].doctorId").value(7),
-                        jsonPath("$.content[0].patientId").value(42)
+                        jsonPath("$.content[0].id").value(5),
+                        jsonPath("$.content[0].patientId").value(55),
+                        jsonPath("$.content[0].doctorId").value(12)
                 );
     }
 
@@ -74,11 +75,12 @@ public class AppointmentControllerTest {
         AppointmentResponseDto dto = new AppointmentResponseDto(2L, LocalDateTime.parse("2025-02-02T10:00:00"), LocalDateTime.parse("2025-02-02T10:30:00"), doctorId, 55L);
         PageDto<AppointmentResponseDto> page = new PageDto<>(List.of(dto), pageable.getPageNumber(), pageable.getPageSize(), 1L, 1);
 
-        when(appointmentService.findForDoctor(doctorId, pageable)).thenReturn(page);
+        when(appointmentService.find(null, doctorId, null, null, null, pageable)).thenReturn(page);
 
         mockMvc.perform(
-                        MockMvcRequestBuilders.get("/appointments/doctor/{id}", doctorId)
+                        MockMvcRequestBuilders.get("/appointments")
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .param("doctorId", String.valueOf(7L))
                                 .param("page", "0")
                                 .param("size", "5")
                 )
@@ -116,7 +118,6 @@ public class AppointmentControllerTest {
     void shouldFindAvailable() throws Exception {
         Long doctorId = 7L;
         String specialization = "dentistry";
-        String date = "2025-04-04";
         String starting = "2025-04-04T08:00:00";
         String ending = "2025-04-04T16:00:00";
         Pageable pageable = PageRequest.of(1, 20);
@@ -124,14 +125,13 @@ public class AppointmentControllerTest {
         AppointmentResponseDto dto = new AppointmentResponseDto(3L, LocalDateTime.parse("2025-04-04T09:00:00"), LocalDateTime.parse("2025-04-04T09:30:00"), doctorId, null);
         PageDto<AppointmentResponseDto> page = new PageDto<>(List.of(dto), pageable.getPageNumber(), pageable.getPageSize(), 1L, 1);
 
-        when(appointmentService.findAvailable(doctorId, specialization, LocalDate.parse(date), LocalDateTime.parse(starting), LocalDateTime.parse(ending), pageable)).thenReturn(page);
+        when(appointmentService.findAvailable(doctorId, specialization, LocalDateTime.parse(starting), LocalDateTime.parse(ending), pageable)).thenReturn(page);
 
         mockMvc.perform(
                         MockMvcRequestBuilders.get("/appointments/available")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .param("doctorId", String.valueOf(doctorId))
                                 .param("specialization", specialization)
-                                .param("date", date)
                                 .param("startingDate", starting)
                                 .param("endingDate", ending)
                                 .param("page", "1")
@@ -156,4 +156,3 @@ public class AppointmentControllerTest {
                 .andExpect(status().isOk());
     }
 }
-

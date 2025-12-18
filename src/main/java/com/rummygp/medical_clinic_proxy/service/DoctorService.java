@@ -1,6 +1,6 @@
 package com.rummygp.medical_clinic_proxy.service;
 
-import com.rummygp.medical_clinic_proxy.client.DoctorClient;
+import com.rummygp.medical_clinic_proxy.client.MedicalClinicClient;
 import com.rummygp.medical_clinic_proxy.model.dto.DoctorDto;
 import com.rummygp.medical_clinic_proxy.model.dto.PageDto;
 import lombok.RequiredArgsConstructor;
@@ -12,10 +12,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class DoctorService {
-    private final DoctorClient doctorClient;
+    private final MedicalClinicClient medicalClinicClient;
 
     public PageDto<DoctorDto> getDoctors(String specialization, Pageable pageable) {
         log.debug("Fetching doctors with specialization='{}', pageable={}", specialization, pageable);
-        return doctorClient.getDoctors(specialization, pageable);
+        return medicalClinicClient.getDoctors(specialization, pageable);
     }
 }

@@ -1,5 +1,6 @@
 package com.rummygp.medical_clinic_proxy.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rummygp.medical_clinic_proxy.decoder.MedicalClinicErrorDecoder;
 import feign.Retryer;
 import feign.codec.ErrorDecoder;
@@ -23,7 +24,7 @@ public class MedicalClinicConfig {
     }
 
     @Bean
-    public ErrorDecoder errorDecoder() {
-        return new MedicalClinicErrorDecoder();
+    public ErrorDecoder errorDecoder(ObjectMapper mapper) {
+        return new MedicalClinicErrorDecoder(mapper);
     }
 }
